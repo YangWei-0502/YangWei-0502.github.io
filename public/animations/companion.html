@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 智能伴侣 项目动画演示｜杨威</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='38' rx='10' fill='%233E92CC'/%3E%3Ccircle cx='24' cy='34' r='5' fill='%23fff'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="animation.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="mark"></span>杨威 · 项目动画演示</div>
+    <a class="back" href="../projects/companion/">← 返回项目介绍</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="crumb">动画演示 · AI 智能伴侣</p>
+    <h1>一个能长期用的对话应用，后端每一层分别在守什么</h1>
+    <p class="lead">分幕讲清四层后端、登录与令牌、流式对话、数据隔离、后台导出、统一错误与日志、限流与审计。画面只表现结构与规则。</p>
+  </section>
+
+  <section class="player">
+    <div class="stage-shell">
+      <div class="stage-head">
+        <span class="scene-tag" id="chapter">整体框架</span>
+        <span class="scene-count" id="counter"></span>
+      </div>
+      <h2 class="scene-title" id="sceneTitle"></h2>
+      <div class="board">
+        <div class="stage" id="stage"></div>
+        <aside class="notes">
+          <h2>讲解要点</h2>
+          <ul id="points"></ul>
+        </aside>
+      </div>
+      <p class="caption" id="caption"></p>
+      <div class="controls">
+        <button class="btn primary" id="toggle">暂停</button>
+        <button class="btn ghost" id="prev">上一幕</button>
+        <button class="btn ghost" id="next">下一幕</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">动画只讲结构与思路；联系我源码可提供（本地可运行）。<a href="../projects/companion/">看项目介绍 →</a></p>
+</main>
+
+<script>
+window.SCENES = [
+  {
+    chapter: "整体框架",
+    title: "后端分成四层，各管一件事",
+    narration: "界面只发请求，不碰数据库；路由层解析参数，业务层定规则，基础设施层管数据库、模型与后台任务，核心层放配置、安全与异常。",
+    layers: [
+      { name: "界面", chips: [
+        { label: "会话界面", sub: "只走请求接口", tone: "actor" },
+        { label: "人设选择", sub: "切换对话风格", tone: "doc" },
+        { label: "导出入口", sub: "拿一份记录", tone: "tool" }
+      ]},
+      { name: "路由层", chips: [
+        { label: "鉴权路由", sub: "注册与登录", tone: "actor" },
+        { label: "会话路由", sub: "会话与消息", tone: "actor" },
+        { label: "任务路由", sub: "导出任务", tone: "tool" }
+      ]},
+      { name: "业务层", chips: [
+        { label: "会话服务", sub: "归属校验", tone: "check" },
+        { label: "消息服务", sub: "上下文组装", tone: "doc" },
+        { label: "人设服务", sub: "预设规则", tone: "doc" }
+      ]},
+      { name: "基础设施", chips: [
+        { label: "关系库", sub: "版本化迁移", tone: "doc" },
+        { label: "模型通道", sub: "本地或云端", tone: "tool" },
+        { label: "审计与任务", sub: "留痕与异步", tone: "warn" }
+      ]}
+    ],
+    points: [
+      "界面不直连数据库，换前端不影响后端规则。",
+      "业务层只做规则，不拼查询，也不懂模型细节。",
+      "基础设施可替换：换模型供应商，业务层不用改。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "口令怎么存，令牌怎么发",
+    narration: "口令不明文存，用加盐的慢哈希；登录后发一个不透明令牌，后续请求靠它认人。",
+    nodes: [
+      { label: "注册", sub: "账号与口令", tone: "actor" },
+      { label: "加盐慢哈希", sub: "抬高撞库成本", tone: "check" },
+      { label: "存用户", sub: "只存哈希", tone: "doc" },
+      { label: "登录", sub: "校验口令", tone: "actor" },
+      { label: "发不透明令牌", sub: "随机不可猜", tone: "tool" },
+      { label: "后续请求校验", sub: "认人不认内容", tone: "result" }
+    ],
+    points: [
+      "慢哈希的意义是让撞库变贵，不是让登录变慢。",
+      "令牌不携带用户信息，只做索引，泄漏后也能吊销。",
+      "口令与令牌都不进日志。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "一轮回复是怎么一段段推出来的",
+    narration: "先校验会话归属，再把人设与最近消息组装成上下文，模型边生成边推送，结束后整段落库。",
+    nodes: [
+      { label: "发消息", sub: "用户输入", tone: "actor" },
+      { label: "归属校验", sub: "不是你的就拒", tone: "check" },
+      { label: "组装上下文", sub: "人设与最近几轮", tone: "doc" },
+      { label: "流式生成", sub: "逐段推送", tone: "tool" },
+      { label: "结束后落库", sub: "一次写完整", tone: "result" }
+    ],
+    points: [
+      "上下文只带最近若干轮，避免无限增长把关键信息挤掉。",
+      "流式推送改善的是等待体验，不改变答案正确性。",
+      "落库在生成结束后做，中途断开不会留下半条消息。"
+    ]
+  },
+  {
+    chapter: "异常与边界",
+    title: "越权访问要当场拒绝并留痕",
+    narration: "所有资源按用户隔离；访问别人的会话直接拒绝，并写一条审计。",
+    nodes: [
+      { label: "请求身份", sub: "谁在访问", tone: "actor" },
+      { label: "资源归属", sub: "按用户比对", tone: "check" },
+      { label: "放行或拒绝", sub: "当场判定", tone: "warn" },
+      { label: "审计留痕", sub: "记谁试过", tone: "doc" },
+      { label: "响应", sub: "不透露内容", tone: "result" }
+    ],
+    points: [
+      "拒绝时只说无权限，不透露对方会话是否存在。",
+      "越权尝试要留痕，这是发现异常行为的主要线索。",
+      "隔离在业务层统一做，避免每个接口各写一遍。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "导出这种慢活，不占着请求",
+    narration: "提交导出后立刻返回一个任务编号；真正的打包在后台跑，状态从排队到完成或失败。",
+    nodes: [
+      { label: "提交", sub: "请求导出", tone: "actor" },
+      { label: "幂等键校验", sub: "重复提交同一个", tone: "check" },
+      { label: "建任务", sub: "先落一条记录", tone: "doc" },
+      { label: "后台执行", sub: "不占请求线程", tone: "tool" },
+      { label: "状态推进", sub: "排队到结束", tone: "warn" },
+      { label: "结果可取", sub: "成功或失败如实", tone: "result" }
+    ],
+    points: [
+      "幂等键让手抖点两次不会生成两份导出。",
+      "任务状态如实反映失败，不用已完成掩盖异常。",
+      "慢活移出请求线程，接口响应时间才稳定。"
+    ]
+  },
+  {
+    chapter: "可观测",
+    title: "出错时，前后端都能对上号",
+    narration: "每个请求生成一个编号，贯穿访问日志、业务日志与模型调用；错误统一成同一种结构返回。",
+    nodes: [
+      { label: "请求进入", sub: "带路径与方法", tone: "actor" },
+      { label: "生成请求编号", sub: "贯穿整条链路", tone: "tool" },
+      { label: "处理", sub: "业务与模型", tone: "doc" },
+      { label: "出错分类", sub: "业务或未知", tone: "check" },
+      { label: "统一结构返回", sub: "编号与原因", tone: "result" },
+      { label: "日志落盘", sub: "按行可查", tone: "doc" }
+    ],
+    points: [
+      "编号是把用户描述与日志行对上的唯一线索。",
+      "未知异常只回通用提示，堆栈留在服务端。",
+      "结构化日志便于按编号、路径、耗时检索。"
+    ]
+  },
+  {
+    chapter: "异常与边界",
+    title: "保护自己，也留下证据",
+    narration: "同一用户短时间请求过多就拒绝；登录、删会话、越权、发消息、导出都写审计。",
+    nodes: [
+      { label: "请求", sub: "达到入口", tone: "actor" },
+      { label: "滑动窗口计数", sub: "按用户与时间", tone: "tool" },
+      { label: "超限拒绝", sub: "先保服务", tone: "warn" },
+      { label: "正常处理", sub: "进入业务", tone: "check" },
+      { label: "关键动作审计", sub: "谁做了什么", tone: "doc" },
+      { label: "可追溯", sub: "按时间回溯", tone: "result" }
+    ],
+    points: [
+      "限流按用户维度，避免一个人把服务打满。",
+      "审计只记必要字段，敏感内容不落库。",
+      "审计与业务数据同库不同表，便于按时间回溯。"
+    ]
+  },
+  {
+    chapter: "质量与边界",
+    title: "这套东西怎么保证以后还能改",
+    narration: "表结构有版本化迁移，配置集中在核心层，模型可切本地或云端；缺省配置下就能离线跑起来。",
+    layers: [
+      { name: "迁移", chips: [
+        { label: "版本化迁移", sub: "启动自动对齐", tone: "tool" },
+        { label: "初始数据", sub: "人格预设", tone: "doc" }
+      ]},
+      { name: "配置", chips: [
+        { label: "配置集中", sub: "换环境只改配置", tone: "doc" },
+        { label: "依赖注入", sub: "替换实现", tone: "tool" }
+      ]},
+      { name: "模型", chips: [
+        { label: "本地模型", sub: "默认离线可用", tone: "tool" },
+        { label: "云端备选", sub: "需密钥才启用", tone: "warn" }
+      ]}
+    ],
+    points: [
+      "迁移版本化让别人的机器上能不能跑起来变成可验证的事。",
+      "配置与代码分离，换环境不用改代码。",
+      "本地优先保证离线可用，也避免数据外发。"
+    ]
+  }
+];
+</script>
+<script src="animation.js"></script>
+</body>
+</html>

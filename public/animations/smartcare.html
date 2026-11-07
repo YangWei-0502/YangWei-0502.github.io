@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>智护 SmartCare 项目动画演示｜杨威</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='38' rx='10' fill='%233E92CC'/%3E%3Ccircle cx='24' cy='34' r='5' fill='%23fff'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="animation.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="mark"></span>杨威 · 项目动画演示</div>
+    <a class="back" href="../projects/smartcare/">← 返回项目介绍</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="crumb">动画演示 · 智护 SmartCare</p>
+    <h1>客服和运营，为什么应该长在同一个数据底座上</h1>
+    <p class="lead">这个项目按设计蓝图讲：双引擎、数据中台、治理与降级怎么组织，以及当前落地到哪一步。画面只表现结构与口径。</p>
+  </section>
+
+  <section class="player">
+    <div class="stage-shell">
+      <div class="stage-head">
+        <span class="scene-tag" id="chapter">整体框架</span>
+        <span class="scene-count" id="counter"></span>
+      </div>
+      <h2 class="scene-title" id="sceneTitle"></h2>
+      <div class="board">
+        <div class="stage" id="stage"></div>
+        <aside class="notes">
+          <h2>讲解要点</h2>
+          <ul id="points"></ul>
+        </aside>
+      </div>
+      <p class="caption" id="caption"></p>
+      <div class="controls">
+        <button class="btn primary" id="toggle">暂停</button>
+        <button class="btn ghost" id="prev">上一幕</button>
+        <button class="btn ghost" id="next">下一幕</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">动画只讲结构与思路；联系我源码可提供（本地可运行）。<a href="../projects/smartcare/">看项目介绍 →</a></p>
+</main>
+
+<script>
+window.SCENES = [
+  {
+    chapter: "整体框架",
+    title: "一个平台，两条业务线，一个数据底座",
+    narration: "客服和运营看起来是两件事，其实共用同一批事实：设备、记录、工单、知识。所以先做底座，再在上面长出两条业务线。",
+    layers: [
+      { name: "前端", chips: [
+        { label: "客服工作台", sub: "对话与办理", tone: "actor" },
+        { label: "运营看板", sub: "趋势与下钻", tone: "result" },
+        { label: "知识维护", sub: "资料与口径", tone: "doc" }
+      ]},
+      { name: "业务层", chips: [
+        { label: "客服引擎", sub: "问、查、办", tone: "actor" },
+        { label: "运营引擎", sub: "记录到结论", tone: "result" }
+      ]},
+      { name: "数据中台", chips: [
+        { label: "数据接入", sub: "登记来源", tone: "doc" },
+        { label: "指标口径", sub: "定义算法", tone: "doc" },
+        { label: "数据服务", sub: "对外供数", tone: "tool" }
+      ]},
+      { name: "治理", chips: [
+        { label: "权限分级", sub: "按角色与范围", tone: "warn" },
+        { label: "审计留痕", sub: "谁做了什么", tone: "check" },
+        { label: "数据血缘", sub: "从哪来到哪去", tone: "tool" }
+      ]},
+      { name: "存储与模型", chips: [
+        { label: "关系库", sub: "业务事实", tone: "doc" },
+        { label: "向量库", sub: "知识检索", tone: "doc" },
+        { label: "本地模型", sub: "默认不外发", tone: "tool" }
+      ]}
+    ],
+    points: [
+      "先有底座再有业务线，避免客服一套数、运营另一套数。",
+      "口径写在一处，报表与问答用同一个定义。",
+      "治理不是附属功能，它决定这套数据能不能被信任。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "客服这条线：问、查、办",
+    narration: "用户问故障，先检索知识给方案；需要看设备就查记录；能办的直接办，风险高的先出方案等人确认。",
+    nodes: [
+      { label: "用户提问", sub: "故障或诉求", tone: "actor" },
+      { label: "知识检索", sub: "先给方案", tone: "doc" },
+      { label: "查设备与记录", sub: "结合历史", tone: "tool" },
+      { label: "能否代办", sub: "判断边界", tone: "check" },
+      { label: "高危确认", sub: "人来点头", tone: "warn" },
+      { label: "结果与工单", sub: "办成或转人", tone: "result" }
+    ],
+    points: [
+      "先答后办：能解释清楚再谈办理，避免一上来就要信息。",
+      "查记录让建议贴合这台设备的实际使用情况。",
+      "办不成要给出下一步，而不是停在请联系客服。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "运营这条线：从记录到结论",
+    narration: "设备使用记录先进底座，按统一口径算成指标，再生成月报与趋势；经营问题可以用自然语言问。",
+    nodes: [
+      { label: "使用记录", sub: "设备回传", tone: "doc" },
+      { label: "口径计算", sub: "按定义算", tone: "tool" },
+      { label: "月报与趋势", sub: "群体视角", tone: "result" },
+      { label: "异常识别", sub: "故障与耗材", tone: "check" },
+      { label: "经营问答", sub: "自然语言问", tone: "actor" },
+      { label: "结论", sub: "可下钻", tone: "result" }
+    ],
+    points: [
+      "指标先定义再计算，避免同名指标两种算法。",
+      "趋势要能下钻到具体设备与批次，否则只能看个大概。",
+      "自然语言问答只查底座，不另建一套数。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "数据进底座要登记、要对齐、要能追",
+    narration: "每个数据来源先登记，字段对齐到统一模型，对外只通过数据服务供数，谁取过都留痕。",
+    nodes: [
+      { label: "来源登记", sub: "谁提供什么", tone: "doc" },
+      { label: "字段对齐", sub: "统一命名与类型", tone: "tool" },
+      { label: "质量校验", sub: "缺失与重复", tone: "check" },
+      { label: "指标落库", sub: "按口径存", tone: "doc" },
+      { label: "数据服务", sub: "对外供数", tone: "tool" },
+      { label: "血缘记录", sub: "可追到源", tone: "result" }
+    ],
+    points: [
+      "登记让这个数从哪来有答案，出问题能定位到来源。",
+      "字段对齐是隐形成本，越晚做越贵。",
+      "只允许通过服务取数，避免各处直连库导致口径漂移。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "同一个事实，两条线各取所需",
+    narration: "客服要这台设备现在怎么样，运营要这一类设备整体怎么样，两者查的是同一批记录，只是聚合方式不同。",
+    nodes: [
+      { label: "同一批事实", sub: "设备与记录", tone: "doc" },
+      { label: "客服视角", sub: "单台与当下", tone: "actor" },
+      { label: "运营视角", sub: "群体与趋势", tone: "result" },
+      { label: "共用工具与轨迹", sub: "一次排查两边看", tone: "tool" },
+      { label: "口径一致", sub: "数字对得上", tone: "check" }
+    ],
+    points: [
+      "两套系统各自建数，最容易出现客服说一个数、报表说另一个数。",
+      "共用工具与轨迹，排查时不用在两个后台来回翻。",
+      "一致性靠同一份底座与同一套口径，而不是靠人工对账。"
+    ]
+  },
+  {
+    chapter: "异常与边界",
+    title: "权限、审计、降级，三件保命的事",
+    narration: "敏感操作按角色分级；关键动作留审计；依赖不全时能降级运行，功能少一点但不停。",
+    layers: [
+      { name: "权限", chips: [
+        { label: "角色分级", sub: "不是按页面", tone: "warn" },
+        { label: "数据范围", sub: "能看哪些设备", tone: "check" },
+        { label: "高危确认", sub: "动手前停一下", tone: "warn" }
+      ]},
+      { name: "审计", chips: [
+        { label: "操作日志", sub: "谁在何时做了什么", tone: "doc" },
+        { label: "越权记录", sub: "尝试也要记", tone: "check" },
+        { label: "审批结论", sub: "批了还是拒了", tone: "result" }
+      ]},
+      { name: "降级", chips: [
+        { label: "关系库回落", sub: "换轻量库", tone: "tool" },
+        { label: "向量库可关", sub: "退回关键词", tone: "check" },
+        { label: "模型可换", sub: "本地或云端", tone: "tool" }
+      ]}
+    ],
+    points: [
+      "权限按数据范围而不是页面，避免能进页面就能看全部。",
+      "降级要显式告知能力受限，不能让用户以为功能正常。",
+      "审计要能支撑事后追责，而不只是排错。"
+    ]
+  },
+  {
+    chapter: "质量与评测",
+    title: "效果好不好，得有证据",
+    narration: "每次运行留轨迹，问答与运营各自有指标，改动用题集回归；不达标就不上线。",
+    nodes: [
+      { label: "运行轨迹", sub: "每步留痕", tone: "doc" },
+      { label: "问答指标", sub: "有没有依据", tone: "check" },
+      { label: "运营指标", sub: "口径与及时性", tone: "check" },
+      { label: "题集回归", sub: "常见故障与口径争议", tone: "tool" },
+      { label: "结论", sub: "过或不过", tone: "result" }
+    ],
+    points: [
+      "客服看答得对不对，运营看算得准不准，指标不能混。",
+      "轨迹要能定位到具体一次检索或一次计算。",
+      "回归题集覆盖常见故障与典型口径争议。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "为什么结构要和另一个项目长得像",
+    narration: "同样的分层、同样的治理、同样的检索思路，意味着维护者只需要懂一套东西，代价是前期结构更重。",
+    nodes: [
+      { label: "同一套分层", sub: "接口到数据", tone: "doc" },
+      { label: "同一套治理", sub: "权限与轨迹", tone: "tool" },
+      { label: "同一套检索", sub: "建库到引用", tone: "check" },
+      { label: "降低维护成本", sub: "只需懂一套", tone: "result" },
+      { label: "代价", sub: "前期见效慢", tone: "warn" }
+    ],
+    points: [
+      "结构复用省的是长期维护成本，不是短期开发速度。",
+      "代价要说清：前期要先把底座搭起来。",
+      "对齐不等于照搬，业务不同，工具与口径必须重做。"
+    ]
+  },
+  {
+    chapter: "质量与边界",
+    title: "现在有什么，还差什么",
+    narration: "这套蓝图里，服务骨架、版本化迁移、健康检查已经就位；数据中台、双引擎、前端还在按依赖顺序推进。",
+    layers: [
+      { name: "已就位", chips: [
+        { label: "服务骨架", sub: "能起能自检", tone: "actor" },
+        { label: "版本化迁移", sub: "表结构可演进", tone: "tool" },
+        { label: "健康检查", sub: "依赖状态可见", tone: "check" }
+      ]},
+      { name: "进行中", chips: [
+        { label: "数据接入", sub: "登记与对齐", tone: "doc" },
+        { label: "指标口径", sub: "定义与落库", tone: "doc" },
+        { label: "客服引擎", sub: "问、查、办", tone: "actor" },
+        { label: "运营引擎", sub: "月报与趋势", tone: "result" }
+      ]},
+      { name: "待补", chips: [
+        { label: "运营看板", sub: "界面与下钻", tone: "result" },
+        { label: "评测与观测", sub: "题集与轨迹", tone: "check" }
+      ]}
+    ],
+    points: [
+      "先把底座与迁移做好，后面加业务不用反复改表。",
+      "蓝图写清楚比先做一个页面更重要，避免返工。",
+      "没做的部分如实标注，不用已完成包装。"
+    ]
+  }
+];
+</script>
+<script src="animation.js"></script>
+</body>
+</html>

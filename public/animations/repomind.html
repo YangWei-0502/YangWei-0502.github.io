@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RepoMind 项目动画演示｜杨威</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='38' rx='10' fill='%233E92CC'/%3E%3Ccircle cx='24' cy='34' r='5' fill='%23fff'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="animation.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="mark"></span>杨威 · 项目动画演示</div>
+    <a class="back" href="../projects/repomind/">← 返回项目介绍</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="crumb">动画演示 · RepoMind</p>
+    <h1>从一条仓库事件到一份可追溯的结论，系统里每一层分别在做什么</h1>
+    <p class="lead">按整体框架、各模块职责、关键设计与边界分幕讲：谁负责取数、谁负责判断、依据不足时怎么处理。画面只表现结构与分工。</p>
+  </section>
+
+  <section class="player">
+    <div class="stage-shell">
+      <div class="stage-head">
+        <span class="scene-tag" id="chapter">整体框架</span>
+        <span class="scene-count" id="counter"></span>
+      </div>
+      <h2 class="scene-title" id="sceneTitle"></h2>
+      <div class="board">
+        <div class="stage" id="stage"></div>
+        <aside class="notes">
+          <h2>讲解要点</h2>
+          <ul id="points"></ul>
+        </aside>
+      </div>
+      <p class="caption" id="caption"></p>
+      <div class="controls">
+        <button class="btn primary" id="toggle">暂停</button>
+        <button class="btn ghost" id="prev">上一幕</button>
+        <button class="btn ghost" id="next">下一幕</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">动画只讲结构与思路；联系我源码可提供（本地可运行）。<a href="../projects/repomind/">看项目介绍 →</a></p>
+</main>
+
+<script>
+window.SCENES = [
+  {
+    chapter: "整体框架",
+    title: "一条工程问题进站后，要经过哪几层",
+    narration: "从上到下是界面、接口、编排、能力、数据五层。界面只管展示，接口把请求变成任务，编排决定谁来办、按什么顺序办，能力层是真正取数和动手的地方，数据层是唯一的事实来源。",
+    layers: [
+      { name: "前端界面", chips: [
+        { label: "对话工作台", sub: "提问与看过程", tone: "actor" },
+        { label: "知识库界面", sub: "建库、上传、试跑", tone: "doc" },
+        { label: "评测页", sub: "跑题集看结果", tone: "result" }
+      ]},
+      { name: "接口层", chips: [
+        { label: "会话接口", sub: "接问题、开会话", tone: "actor" },
+        { label: "知识库接口", sub: "建库与检索", tone: "doc" },
+        { label: "评测接口", sub: "起一次评测任务", tone: "check" }
+      ]},
+      { name: "编排层", chips: [
+        { label: "对话循环", sub: "一轮轮调工具", tone: "actor" },
+        { label: "工作流编排", sub: "规划—执行—复核", tone: "actor" },
+        { label: "技能运行时", sub: "按任务装载能力", tone: "warn" }
+      ]},
+      { name: "能力层", chips: [
+        { label: "工作区工具", sub: "读文件、搜代码", tone: "tool" },
+        { label: "检索工具", sub: "查资料、给依据", tone: "tool" },
+        { label: "仓库工具", sub: "读单子、看改动", tone: "tool" },
+        { label: "安全与周报", sub: "拦截越界、汇总进展", tone: "check" }
+      ]},
+      { name: "数据层", chips: [
+        { label: "关系库", sub: "单据与实时状态", tone: "doc" },
+        { label: "向量库", sub: "文档与切片", tone: "doc" },
+        { label: "代码托管", sub: "仓库的真实内容", tone: "doc" },
+        { label: "模型服务", sub: "生成与判断", tone: "tool" }
+      ]}
+    ],
+    points: [
+      "越往下越慢而稳：界面可以换，数据层必须可信。",
+      "编排层不直接碰数据，能力层不自己做决定，职责分开才好排查。",
+      "结构化状态与语义材料分开存，避免把实时数据当资料用。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "先把仓库里的事实搬进来",
+    narration: "系统不是靠猜回答问题：第一步是把仓库里的事实同步成可查的副本，包括问题单、合并请求、评审意见与构建记录。",
+    nodes: [
+      { label: "仓库", sub: "单子与合并请求", tone: "actor" },
+      { label: "拉取", sub: "分页与增量", tone: "doc" },
+      { label: "归一化", sub: "统一字段与口径", tone: "tool" },
+      { label: "入库", sub: "关系库落表", tone: "doc" },
+      { label: "可查", sub: "带时间与状态", tone: "result" }
+    ],
+    points: [
+      "拉取要能增量：只取变化部分，避免每次全量重扫。",
+      "归一化把不同来源的字段对齐，后面的判断才有统一口径。",
+      "入库保留原始链接与时间，方便回跳到原页面核对。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "一轮对话里，模型其实只做三件事",
+    narration: "读问题、挑工具、看结果。它不直接读数据库，也不直接改仓库，所有事实都从工具返回里来。",
+    nodes: [
+      { label: "问题理解", sub: "到底在问什么", tone: "actor" },
+      { label: "挑工具", sub: "该查哪一类", tone: "actor" },
+      { label: "工具执行", sub: "真实取数", tone: "tool" },
+      { label: "结果回填", sub: "压缩后进上下文", tone: "doc" },
+      { label: "决定收口", sub: "够不够再判断", tone: "check" }
+    ],
+    points: [
+      "工具是唯一取数通道，回答里的事实必须能对上某次工具结果。",
+      "结果回填不是简单拼接：要压缩、要标来源，避免上下文被灌满。",
+      "够不够由模型判断，但边界由规则兜住。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "先给一批材料，允许它中途再查一次",
+    narration: "提问时先按原问题检索一轮，把证据放进上下文；模型读完后发现缺口，可以改写查询再查，最后交叉比对两次结果。",
+    nodes: [
+      { label: "原问题", sub: "用户的说法", tone: "actor" },
+      { label: "预检索", sub: "先给一批候选", tone: "doc" },
+      { label: "注入上下文", sub: "带编号进入", tone: "tool" },
+      { label: "改写再查", sub: "补上缺口", tone: "actor" },
+      { label: "交叉验证", sub: "对不上要标出", tone: "check" },
+      { label: "编号引用", sub: "每段有出处", tone: "result" }
+    ],
+    points: [
+      "预检索保证第一轮就有依据，不让模型空手作答。",
+      "二次检索解决第一轮没问对的问题，查询由模型自己改写。",
+      "两次结果互相印证，冲突的地方要显式说明，而不是挑一个顺眼的。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "资料进库要过几道手",
+    narration: "上传只是开始：解析、切片、向量化、召回、重排、试跑，每一步都可能让最终答案变差。",
+    nodes: [
+      { label: "上传解析", sub: "多种格式统一", tone: "doc" },
+      { label: "段落切片", sub: "按语义边界", tone: "tool" },
+      { label: "向量化", sub: "变成语义坐标", tone: "doc" },
+      { label: "混合召回", sub: "语义加关键词", tone: "tool" },
+      { label: "重排", sub: "相关性再排一次", tone: "check" },
+      { label: "召回试跑", sub: "人工看命中", tone: "result" }
+    ],
+    points: [
+      "切片按段落与标题边界，不硬切固定长度，避免一句话被劈开。",
+      "语义召回擅长意思相近，关键词召回擅长专有名词，两者互补。",
+      "重建索引要清掉旧向量，否则新旧混在一起，召回会失真。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "复杂判断交给几个角色分工",
+    narration: "一个问题同时涉及改动、风险、测试、排期时，一个模型容易顾此失彼；这里拆成规划、专用分析、复核、汇总四个角色。",
+    nodes: [
+      { label: "规划", sub: "拆成有依赖的子任务", tone: "actor" },
+      { label: "专用分析", sub: "各管一块", tone: "actor" },
+      { label: "复核", sub: "按规则逐条挑错", tone: "check" },
+      { label: "打回补做", sub: "不合格退回", tone: "warn" },
+      { label: "汇总", sub: "合成一份结论", tone: "result" }
+    ],
+    points: [
+      "每个专用角色只拿到自己那部分上下文，减少互相干扰。",
+      "复核只挑错不代写，避免自己批自己。",
+      "汇总阶段保留分歧：几个角色结论不一致时如实写出。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "能力按任务发放，不常驻在系统里",
+    narration: "每种能力写成一份说明，讲清能做什么、要什么输入、允许动什么。运行时只装载当前任务需要的那几份。",
+    nodes: [
+      { label: "触发判定", sub: "该不该用这个技能", tone: "check" },
+      { label: "装载说明", sub: "指令与受限资源", tone: "doc" },
+      { label: "工具白名单", sub: "只放开需要的", tone: "tool" },
+      { label: "执行", sub: "越界即拒", tone: "warn" },
+      { label: "写轨迹", sub: "版本与原因留痕", tone: "result" }
+    ],
+    points: [
+      "说明里同时写能做什么和不许做什么，边界比能力更重要。",
+      "只装载当前需要的技能，上下文不被无关能力挤占。",
+      "每次激活记录原因与版本，事后能解释当时为什么用了它。"
+    ]
+  },
+  {
+    chapter: "边界与安全",
+    title: "能建议，不等于能动手",
+    narration: "读、写、危险动作分成三档：读随便查，写只出草稿，危险动作必须有人点头才执行。",
+    nodes: [
+      { label: "只读操作", sub: "查与看", tone: "tool" },
+      { label: "起草建议", sub: "只出草稿", tone: "doc" },
+      { label: "风险识别", sub: "是否越界", tone: "check" },
+      { label: "人工确认", sub: "人来决定", tone: "warn" },
+      { label: "执行或放弃", sub: "结果留记录", tone: "result" }
+    ],
+    points: [
+      "默认不写仓库：所有改动先以草稿给出，由人复制或确认。",
+      "越权请求直接拒绝并说明原因，不靠模型自我约束。",
+      "拒绝与放弃也要留痕，方便复盘为什么没办成。"
+    ]
+  },
+  {
+    chapter: "质量与评测",
+    title: "改完到底变好还是变坏，用题集说话",
+    narration: "系统内置一套人工标注的题集，任何改动先跑一遍：检索准不准、答案有没有依据、目标有没有达成，分开看。",
+    layers: [
+      { name: "题集", chips: [
+        { label: "可答题", sub: "有标准依据", tone: "doc" },
+        { label: "不可答题", sub: "应该拒答", tone: "check" },
+        { label: "越权题", sub: "应该拦住", tone: "warn" }
+      ]},
+      { name: "运行", chips: [
+        { label: "隔离会话", sub: "不污染真实记录", tone: "actor" },
+        { label: "真实调用", sub: "走完整工具链", tone: "tool" },
+        { label: "逐题轨迹", sub: "每步留痕", tone: "doc" }
+      ]},
+      { name: "指标", chips: [
+        { label: "上下文精度", sub: "找得准不准", tone: "check" },
+        { label: "上下文召回", sub: "该找的漏没漏", tone: "check" },
+        { label: "忠实度", sub: "有没有编", tone: "result" },
+        { label: "目标达成", sub: "事有没有办成", tone: "result" }
+      ]},
+      { name: "回归", chips: [
+        { label: "基线对比", sub: "同题同口径", tone: "check" },
+        { label: "失败诊断", sub: "定位到哪一步", tone: "warn" }
+      ]}
+    ],
+    points: [
+      "检索指标与生成指标要分开，混成一个分无法定位问题。",
+      "评测在隔离会话里跑，避免污染真实会话与记忆。",
+      "不达标就不采纳，评测是闸门而不是装饰。"
+    ]
+  }
+];
+</script>
+<script src="animation.js"></script>
+</body>
+</html>

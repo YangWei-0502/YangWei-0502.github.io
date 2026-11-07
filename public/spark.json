@@ -1,0 +1,25 @@
+{
+  "stack": "custom-webapp",
+  "dev": {
+    "command": [
+      "npm",
+      "run",
+      "dev",
+      "--",
+      "-p",
+      "3007"
+    ],
+    "port": 3007
+  },
+  "build": {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "output": "out"
+  },
+  "app": {
+    "id": "app_17gp6jdtaap"
+  }
+}

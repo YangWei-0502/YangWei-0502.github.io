@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>面试助手 项目动画演示｜杨威</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='38' rx='10' fill='%233E92CC'/%3E%3Ccircle cx='24' cy='34' r='5' fill='%23fff'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="animation.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="mark"></span>杨威 · 项目动画演示</div>
+    <a class="back" href="../projects/interview/">← 返回项目介绍</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="crumb">动画演示 · 面试助手</p>
+    <h1>把自己的资料变成会出题的陪练，中间要做哪些事</h1>
+    <p class="lead">分幕讲清资料入库、混合检索加权、答案三重校验、模拟面试、学习统计、缓存与备份、隐私边界。画面只表现流程与判断。</p>
+  </section>
+
+  <section class="player">
+    <div class="stage-shell">
+      <div class="stage-head">
+        <span class="scene-tag" id="chapter">整体框架</span>
+        <span class="scene-count" id="counter"></span>
+      </div>
+      <h2 class="scene-title" id="sceneTitle"></h2>
+      <div class="board">
+        <div class="stage" id="stage"></div>
+        <aside class="notes">
+          <h2>讲解要点</h2>
+          <ul id="points"></ul>
+        </aside>
+      </div>
+      <p class="caption" id="caption"></p>
+      <div class="controls">
+        <button class="btn primary" id="toggle">暂停</button>
+        <button class="btn ghost" id="prev">上一幕</button>
+        <button class="btn ghost" id="next">下一幕</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">动画只讲结构与思路；联系我源码可提供（本地可运行）。<a href="../projects/interview/">看项目介绍 →</a></p>
+</main>
+
+<script>
+window.SCENES = [
+  {
+    chapter: "整体框架",
+    title: "一个本地知识库工具，分了这几块",
+    narration: "界面、问答链路、三类索引、数据与模型四段；所有数据留在本机，能备份也能迁移。",
+    layers: [
+      { name: "界面", chips: [
+        { label: "知识问答", sub: "提问与看引用", tone: "actor" },
+        { label: "模拟面试", sub: "出题与追问", tone: "actor" },
+        { label: "知识库管理", sub: "入库与维护", tone: "doc" },
+        { label: "学习统计", sub: "盲区与趋势", tone: "result" },
+        { label: "系统设置", sub: "参数与备份", tone: "tool" }
+      ]},
+      { name: "问答链路", chips: [
+        { label: "混合检索", sub: "三路线索", tone: "tool" },
+        { label: "约束生成", sub: "只依据资料", tone: "result" },
+        { label: "三重校验", sub: "出门前把关", tone: "check" }
+      ]},
+      { name: "索引", chips: [
+        { label: "向量索引", sub: "意思相近", tone: "doc" },
+        { label: "关键词索引", sub: "术语精确", tone: "doc" },
+        { label: "知识图谱", sub: "补关联", tone: "tool" }
+      ]},
+      { name: "数据与模型", chips: [
+        { label: "本地库", sub: "事实与记录", tone: "doc" },
+        { label: "本地模型", sub: "默认不外发", tone: "tool" },
+        { label: "缓存", sub: "重复问题直达", tone: "tool" }
+      ]}
+    ],
+    points: [
+      "三种索引解决三类问题：意思相近、术语精确、概念关联。",
+      "检索与生成分开，才能判断问题出在找不到还是写不好。",
+      "本地优先是定位：这是个人备考工具，不是公共服务。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "什么格式都能进，但要走同一条路",
+    narration: "文档、图片、网页先统一成文本，识别标题与表格结构，再按可调长度切片；重复内容不重复处理。",
+    nodes: [
+      { label: "上传", sub: "文档、图片、网页", tone: "doc" },
+      { label: "解析与识别", sub: "标题、表格、代码块", tone: "tool" },
+      { label: "切片", sub: "长度可调", tone: "check" },
+      { label: "变化检测", sub: "只处理变更块", tone: "tool" },
+      { label: "建索引", sub: "三路线索", tone: "doc" },
+      { label: "可检索", sub: "带来源定位", tone: "result" }
+    ],
+    points: [
+      "图片先做文字识别再入库，避免图片里的知识搜不到。",
+      "切片长度可调，因为不同资料的最佳粒度不同。",
+      "增量更新只碰变化的块，重导不用整库重来。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "三路线索怎么合成一个排序",
+    narration: "语义通道看意思，关键词通道看术语，图谱通道补关联；各自归一化后按权重合成，图谱只做加分。",
+    nodes: [
+      { label: "问题", sub: "用户提问", tone: "actor" },
+      { label: "语义通道", sub: "意思相近", tone: "tool" },
+      { label: "关键词通道", sub: "术语精确", tone: "tool" },
+      { label: "图谱扩展", sub: "关联补全", tone: "warn" },
+      { label: "加权融合", sub: "归一化后相加", tone: "check" },
+      { label: "少量候选", sub: "只留高置信", tone: "result" }
+    ],
+    points: [
+      "权重可调且自动归一化，避免调一个参数把另一个挤没。",
+      "图谱只做加分，不占主权重，防止关联把离题内容拉进来。",
+      "无相关候选就拒答，不拿低分结果硬凑。"
+    ]
+  },
+  {
+    chapter: "质量与评测",
+    title: "答案出门前过三道关",
+    narration: "先按规则查格式与依据，再做多源交叉，最后按面试场景过滤；不过就带着约束重写。",
+    nodes: [
+      { label: "初稿", sub: "模型先写", tone: "result" },
+      { label: "规则检查", sub: "格式与依据", tone: "check" },
+      { label: "交叉验证", sub: "多源是否一致", tone: "check" },
+      { label: "场景过滤", sub: "面试口径", tone: "warn" },
+      { label: "带约束重写", sub: "不过就改", tone: "tool" },
+      { label: "通过输出", sub: "附来源", tone: "result" }
+    ],
+    points: [
+      "规则检查抓的是硬伤：没有依据、格式错、答非所问。",
+      "交叉验证看的是冲突：几个来源说法不一致时要标出来。",
+      "重写要带具体约束，不然只是把错误再写一遍。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "出题、追问、评分，各是什么逻辑",
+    narration: "按岗位与难度抽题，回答后追问薄弱处；评分对照要点，指出遗漏，结束后沉淀成面经。",
+    nodes: [
+      { label: "配置岗位", sub: "岗位与难度", tone: "actor" },
+      { label: "抽题", sub: "覆盖不同方向", tone: "actor" },
+      { label: "追问", sub: "抓薄弱处", tone: "check" },
+      { label: "作答", sub: "口头表达", tone: "doc" },
+      { label: "对照评分", sub: "要点与遗漏", tone: "check" },
+      { label: "面经沉淀", sub: "结构化记录", tone: "result" }
+    ],
+    points: [
+      "追问比出题更重要：它把背过与会讲区分开。",
+      "评分对照要点，指出缺哪一块，而不是只给一个分。",
+      "面经沉淀成结构化记录，下次可以直接复习。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "从答题记录里看出该补什么",
+    narration: "高频问题、知识盲区、掌握度、错题趋势都从记录里算出来，用来决定下一步练什么。",
+    nodes: [
+      { label: "答题记录", sub: "每次练习", tone: "doc" },
+      { label: "高频问题", sub: "问得多", tone: "tool" },
+      { label: "盲区识别", sub: "反复答错", tone: "check" },
+      { label: "掌握度估计", sub: "看多次表现", tone: "result" },
+      { label: "练习建议", sub: "排优先级", tone: "actor" }
+    ],
+    points: [
+      "高频与盲区是两个维度：常问不等于不会。",
+      "掌握度要看多次表现，单次对错参考价值有限。",
+      "统计的目的是排优先级，不是做一张好看的图。"
+    ]
+  },
+  {
+    chapter: "异常与边界",
+    title: "重复问题直达，换机也能带走",
+    narration: "常见问题走两级缓存直接返回；备份把数据打包，恢复前再自动存一份，避免越恢复越乱。",
+    nodes: [
+      { label: "重复提问", sub: "同一问题", tone: "actor" },
+      { label: "内存缓存", sub: "最快一层", tone: "tool" },
+      { label: "磁盘缓存", sub: "重启仍可用", tone: "check" },
+      { label: "未命中", sub: "走完整链路", tone: "result" },
+      { label: "备份打包", sub: "整目录带走", tone: "doc" },
+      { label: "恢复校验", sub: "先备份再恢复", tone: "warn" }
+    ],
+    points: [
+      "两级缓存：一层快但会丢，一层慢但重启还在。",
+      "缓存要能失效，资料更新后不能继续给旧答案。",
+      "恢复前先备份，是为了让错误操作可回退。"
+    ]
+  },
+  {
+    chapter: "质量与边界",
+    title: "数据不出机器，代价是什么",
+    narration: "全本地运行意味着隐私可控，但也意味着效果取决于本机模型，重活会慢一些。",
+    layers: [
+      { name: "数据", chips: [
+        { label: "本地库", sub: "资料与记录", tone: "doc" },
+        { label: "本地索引", sub: "向量与关键词", tone: "tool" },
+        { label: "备份文件", sub: "自己保管", tone: "warn" }
+      ]},
+      { name: "模型", chips: [
+        { label: "本地生成", sub: "默认通道", tone: "tool" },
+        { label: "云端备选", sub: "需密钥才启用", tone: "warn" }
+      ]},
+      { name: "代价", chips: [
+        { label: "长文档慢", sub: "本机算力有限", tone: "warn" },
+        { label: "复杂推理弱", sub: "模型规模有限", tone: "check" },
+        { label: "隐私可控", sub: "数据不出机", tone: "result" }
+      ]}
+    ],
+    points: [
+      "本地化不是免费的：算力有限，复杂问题会吃力。",
+      "敏感资料不进云端，是这类工具的核心承诺。",
+      "备份文件自己保管，它就是一份完整数据副本。"
+    ]
+  }
+];
+</script>
+<script src="animation.js"></script>
+</body>
+</html>

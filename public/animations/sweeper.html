@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>扫地机器人智能客服 项目动画演示｜杨威</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='38' rx='10' fill='%233E92CC'/%3E%3Ccircle cx='24' cy='34' r='5' fill='%23fff'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="animation.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="mark"></span>杨威 · 项目动画演示</div>
+    <a class="back" href="../projects/sweeper/">← 返回项目介绍</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="crumb">动画演示 · 扫地机器人智能客服</p>
+    <h1>一句售后咨询进来，系统怎么决定“答、查、办”，又怎么保证不闯祸</h1>
+    <p class="lead">分幕讲清运行时、治理闸门、执行状态机、外部工具接入、失败与循环保护、执行轨迹。画面只表现结构与分工。</p>
+  </section>
+
+  <section class="player">
+    <div class="stage-shell">
+      <div class="stage-head">
+        <span class="scene-tag" id="chapter">整体框架</span>
+        <span class="scene-count" id="counter"></span>
+      </div>
+      <h2 class="scene-title" id="sceneTitle"></h2>
+      <div class="board">
+        <div class="stage" id="stage"></div>
+        <aside class="notes">
+          <h2>讲解要点</h2>
+          <ul id="points"></ul>
+        </aside>
+      </div>
+      <p class="caption" id="caption"></p>
+      <div class="controls">
+        <button class="btn primary" id="toggle">暂停</button>
+        <button class="btn ghost" id="prev">上一幕</button>
+        <button class="btn ghost" id="next">下一幕</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">动画只讲结构与思路；联系我源码可提供（本地可运行）。<a href="../projects/sweeper/">看项目介绍 →</a></p>
+</main>
+
+<script>
+window.SCENES = [
+  {
+    chapter: "整体框架",
+    title: "一个售后对话系统，里面分了这几块",
+    narration: "界面只是入口，真正干活的是运行时；它每一步都要过治理，过程写进执行轨迹，事实存在知识库与会话库。",
+    layers: [
+      { name: "界面", chips: [
+        { label: "问答页", sub: "提问与追问", tone: "actor" },
+        { label: "轨迹页", sub: "回看每一步", tone: "tool" },
+        { label: "知识库页", sub: "资料与重建", tone: "doc" },
+        { label: "使用报告", sub: "按月汇总", tone: "result" }
+      ]},
+      { name: "运行时", chips: [
+        { label: "决策循环", sub: "答还是办", tone: "actor" },
+        { label: "上下文组装", sub: "会话与资料", tone: "doc" }
+      ]},
+      { name: "治理", chips: [
+        { label: "入参校验", sub: "参数不合格就拒", tone: "check" },
+        { label: "权限分级", sub: "读、写、高危", tone: "warn" },
+        { label: "审批闸门", sub: "高危先停住", tone: "warn" }
+      ]},
+      { name: "状态与记录", chips: [
+        { label: "执行状态机", sub: "只允许合法转移", tone: "tool" },
+        { label: "轨迹落库", sub: "脱敏后留痕", tone: "doc" }
+      ]},
+      { name: "数据与模型", chips: [
+        { label: "向量知识库", sub: "资料检索", tone: "doc" },
+        { label: "会话库", sub: "历史与月报", tone: "doc" },
+        { label: "本地模型", sub: "默认不外发", tone: "tool" }
+      ]}
+    ],
+    points: [
+      "治理层是纯规则，不依赖模型自觉。",
+      "状态机把现在走到哪一步变成可判定的事实。",
+      "轨迹与业务数据分开存，排查时互不干扰。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "一句话进来，先决定是答还是办",
+    narration: "先把诉求归到咨询、排查、办理三类，再决定直接答、查资料、还是调工具去办；能不能办由治理层定，不由模型自己定。",
+    nodes: [
+      { label: "用户问题", sub: "咨询或诉求", tone: "actor" },
+      { label: "建执行记录", sub: "开一次运行", tone: "doc" },
+      { label: "诉求归类", sub: "咨询/排查/办理", tone: "check" },
+      { label: "模型决策", sub: "答还是调工具", tone: "actor" },
+      { label: "治理校验", sub: "权限与入参", tone: "warn" },
+      { label: "组织回答", sub: "给结论或转人", tone: "result" }
+    ],
+    points: [
+      "分类先于动作，避免用一套话术应付所有诉求。",
+      "每次运行都有独立记录，失败也能追到具体一步。",
+      "模型说“要办”，能不能办由治理层裁决。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "把“走到哪一步”写成状态",
+    narration: "规划、执行、等工具、等审批、观察、综合、结束，每一步只能按规定往下走；走错直接报错，不靠自觉。",
+    layers: [
+      { name: "正常路径", chips: [
+        { label: "规划", sub: "先想怎么答", tone: "actor" },
+        { label: "执行", sub: "决定调用", tone: "actor" },
+        { label: "等工具", sub: "挂起等待", tone: "tool" },
+        { label: "观察", sub: "读结果", tone: "tool" },
+        { label: "综合", sub: "组织结论", tone: "result" }
+      ]},
+      { name: "分支", chips: [
+        { label: "待审批", sub: "高危停住", tone: "warn" },
+        { label: "批准继续", sub: "回到执行", tone: "result" },
+        { label: "拒绝退回", sub: "记一条拒绝", tone: "check" }
+      ]},
+      { name: "异常收尾", chips: [
+        { label: "失败", sub: "友好收尾", tone: "warn" },
+        { label: "降级", sub: "兜底不装成功", tone: "check" },
+        { label: "触顶", sub: "步数或时长到限", tone: "warn" }
+      ]}
+    ],
+    points: [
+      "非法转移直接报错，能在单测里覆盖，不靠人盯。",
+      "每个异常都有明确终点，不会卡在中间态。",
+      "降级是给一个能用的下限，不是假装完成。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "每个工具先登记，再允许调用",
+    narration: "工具不是随手加函数：先声明要什么参数、什么权限、超时多久、失败重试几次，调用前统一校验。",
+    nodes: [
+      { label: "工具声明", sub: "入参与权限", tone: "doc" },
+      { label: "入参校验", sub: "不合格即拒", tone: "check" },
+      { label: "权限判定", sub: "读/写/高危", tone: "warn" },
+      { label: "执行", sub: "计时与重试", tone: "tool" },
+      { label: "结果摘要", sub: "截断与脱敏", tone: "result" }
+    ],
+    points: [
+      "声明式注册让能干什么变成一张表，而不是散落在各处。",
+      "校验放在调用前，参数不合法不进执行。",
+      "结果统一截断与脱敏，避免把长文本和隐私灌进上下文。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "要动真格的动作，先停下来问人",
+    narration: "派单、重置设备、下单耗材这类动作，系统只给方案，等人确认才执行；不确认就记一条拒绝。",
+    nodes: [
+      { label: "识别高危", sub: "属于风险类", tone: "warn" },
+      { label: "生成方案", sub: "说清要做什么", tone: "doc" },
+      { label: "暂停等人", sub: "挂起不执行", tone: "warn" },
+      { label: "人工确认", sub: "人来点头", tone: "actor" },
+      { label: "执行或拒绝", sub: "两侧都留痕", tone: "result" }
+    ],
+    points: [
+      "闸门放在执行前，而不是执行后补一句已通知。",
+      "未确认时不执行，也不假装已经办了。",
+      "拒绝要留痕，方便统计哪些诉求其实需要人工。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "外部能力用标准协议接进来",
+    narration: "天气这类外部工具不写死在业务里，而是按统一协议接入：先握手，再问它有哪些能力，最后按名字调用。",
+    nodes: [
+      { label: "启动外部服务", sub: "独立进程", tone: "tool" },
+      { label: "握手", sub: "确认协议版本", tone: "doc" },
+      { label: "发现能力", sub: "拿到工具清单", tone: "tool" },
+      { label: "按名调用", sub: "参数与白名单", tone: "check" },
+      { label: "错误码转人话", sub: "不把异常抛给模型", tone: "result" }
+    ],
+    points: [
+      "协议统一后，换供应商不用改业务代码。",
+      "能力清单先发现再调用，避免调用不存在的方法。",
+      "上游错误码要翻译成人能看懂的话。"
+    ]
+  },
+  {
+    chapter: "异常与边界",
+    title: "出问题时的几条硬规矩",
+    narration: "失败先重试，仍失败就降级给可用下限；同一个动作反复做就强制停；步数和总时长都有上限。",
+    nodes: [
+      { label: "工具失败", sub: "超时或报错", tone: "warn" },
+      { label: "按策略重试", sub: "有次数上限", tone: "check" },
+      { label: "降级兜底", sub: "给下限不装成功", tone: "tool" },
+      { label: "同参重复检测", sub: "到限强制停", tone: "warn" },
+      { label: "优雅收尾", sub: "说清发生了什么", tone: "result" }
+    ],
+    points: [
+      "失败不抛给模型，避免它自己编一个成功。",
+      "同参重复是最常见的死循环，用纯规则拦比靠提示词稳。",
+      "上限到了要有终点，不能无限跑。"
+    ]
+  },
+  {
+    chapter: "可观测",
+    title: "每一步都留痕，事后能复盘",
+    narration: "一次运行拆成多条步骤记录：状态、事件、工具、脱敏入参、结果摘要、耗时、是否重试或降级、审批结论。",
+    nodes: [
+      { label: "开运行", sub: "一行总记录", tone: "doc" },
+      { label: "每步落库", sub: "一步一条", tone: "tool" },
+      { label: "脱敏与截断", sub: "隐私不出库", tone: "check" },
+      { label: "轨迹页回看", sub: "逐步展开", tone: "actor" },
+      { label: "使用月报", sub: "汇总趋势", tone: "result" }
+    ],
+    points: [
+      "总记录看这次成没成，步骤记录看卡在哪。",
+      "脱敏在落库前做，避免日志成为泄漏点。",
+      "月报从同一批记录汇总，口径与轨迹一致。"
+    ]
+  },
+  {
+    chapter: "质量与边界",
+    title: "系统知道自己哪里不行",
+    narration: "知识覆盖不到就转人工；回答要净化掉思考残留与半截工具输出；默认本地模型，数据不出机器。",
+    layers: [
+      { name: "知识边界", chips: [
+        { label: "有依据", sub: "给结论", tone: "doc" },
+        { label: "无依据", sub: "明确说没有", tone: "check" },
+        { label: "转人工", sub: "交回给人", tone: "actor" }
+      ]},
+      { name: "回答净化", chips: [
+        { label: "去思考行", sub: "不展示草稿", tone: "check" },
+        { label: "去残留结构", sub: "清工具输出", tone: "tool" },
+        { label: "流式输出", sub: "边生成边推", tone: "result" }
+      ]},
+      { name: "隐私", chips: [
+        { label: "本地模型", sub: "默认不走云端", tone: "tool" },
+        { label: "敏感字段脱敏", sub: "联系与设备标识", tone: "warn" },
+        { label: "会话隔离", sub: "按用户分开", tone: "actor" }
+      ]}
+    ],
+    points: [
+      "答不了要主动说，并给出下一步，而不是硬编。",
+      "净化在输出前做，用户看到的必须是成品。",
+      "本地优先是取舍：牺牲一点效果，换数据不出机器。"
+    ]
+  }
+];
+</script>
+<script src="animation.js"></script>
+</body>
+</html>

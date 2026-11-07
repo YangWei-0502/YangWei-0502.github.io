@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://yangwei-ljj.github.io/sitemap.xml

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>电商知识库问答 项目动画演示｜杨威</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='38' rx='10' fill='%233E92CC'/%3E%3Ccircle cx='24' cy='34' r='5' fill='%23fff'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="animation.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="mark"></span>杨威 · 项目动画演示</div>
+    <a class="back" href="../projects/ecom-rag/">← 返回项目介绍</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="crumb">动画演示 · 电商知识库问答</p>
+    <h1>资料从入库到被引用，中间到底走了哪几步</h1>
+    <p class="lead">分幕讲清摄取生命周期、检索的两条通道、引用与拒答、删除一致性、权限隔离、评测如何决定开关。画面只表现流程与判断。</p>
+  </section>
+
+  <section class="player">
+    <div class="stage-shell">
+      <div class="stage-head">
+        <span class="scene-tag" id="chapter">整体框架</span>
+        <span class="scene-count" id="counter"></span>
+      </div>
+      <h2 class="scene-title" id="sceneTitle"></h2>
+      <div class="board">
+        <div class="stage" id="stage"></div>
+        <aside class="notes">
+          <h2>讲解要点</h2>
+          <ul id="points"></ul>
+        </aside>
+      </div>
+      <p class="caption" id="caption"></p>
+      <div class="controls">
+        <button class="btn primary" id="toggle">暂停</button>
+        <button class="btn ghost" id="prev">上一幕</button>
+        <button class="btn ghost" id="next">下一幕</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">动画只讲结构与思路；联系我源码可提供（本地可运行）。<a href="../projects/ecom-rag/">看项目介绍 →</a></p>
+</main>
+
+<script>
+window.SCENES = [
+  {
+    chapter: "整体框架",
+    title: "问答服务由哪几块拼起来",
+    narration: "前台两个入口共用一个核心服务层：一个负责资料进库，一个负责问题出答案；下面靠关系库与向量库对齐。",
+    layers: [
+      { name: "入口", chips: [
+        { label: "问答界面", sub: "提问与看引用", tone: "actor" },
+        { label: "知识管理接口", sub: "上传、删除、重建", tone: "doc" },
+        { label: "健康检查", sub: "依赖是否可用", tone: "check" }
+      ]},
+      { name: "核心服务", chips: [
+        { label: "摄取", sub: "解析到入库", tone: "doc" },
+        { label: "检索", sub: "两路候选融合", tone: "tool" },
+        { label: "问答生成", sub: "只依据证据", tone: "result" },
+        { label: "评测", sub: "跑标注集", tone: "check" }
+      ]},
+      { name: "存储", chips: [
+        { label: "关系库", sub: "文档与块的真相", tone: "doc" },
+        { label: "向量库", sub: "语义索引", tone: "doc" },
+        { label: "关键词索引", sub: "从事实源派生", tone: "tool" }
+      ]},
+      { name: "模型", chips: [
+        { label: "嵌入模型", sub: "问题变坐标", tone: "tool" },
+        { label: "生成模型", sub: "组织答案", tone: "result" }
+      ]}
+    ],
+    points: [
+      "事实源只有一个，索引可以重建，顺序不能反。",
+      "两个入口共用服务层，避免界面一份逻辑、接口另一份。",
+      "关键词索引从事实源实时派生，减少第二份真相。"
+    ]
+  },
+  {
+    chapter: "模块职责",
+    title: "一份资料进库，状态要能说清",
+    narration: "上传后被置为处理中，解析、切片、去重、嵌入、双写都过了才置就绪；中途失败要记原因。",
+    nodes: [
+      { label: "上传校验", sub: "类型与大小", tone: "check" },
+      { label: "解析", sub: "多格式统一文本", tone: "doc" },
+      { label: "置处理中", sub: "先占位", tone: "warn" },
+      { label: "切片", sub: "长度与重叠", tone: "tool" },
+      { label: "块级去重", sub: "指纹相同跳过", tone: "check" },
+      { label: "嵌入双写", sub: "向量与事实", tone: "tool" },
+      { label: "就绪或失败", sub: "失败留原因", tone: "result" }
+    ],
+    points: [
+      "状态机让这份资料能不能用有明确答案。",
+      "块级指纹去重，重复上传不会堆出多份相同证据。",
+      "失败要落原因，不能只留一个空文档。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "先粗筛，再细排",
+    narration: "问题先变成语义坐标去向量库找候选，再用距离阈值和相对地板剔掉明显不相关的；同时跑一路关键词检索，两路结果融合排序。",
+    nodes: [
+      { label: "问题", sub: "用户原话", tone: "doc" },
+      { label: "向量候选", sub: "语义相近", tone: "tool" },
+      { label: "距离过滤", sub: "差太远剔除", tone: "check" },
+      { label: "关键词通道", sub: "专有词命中", tone: "tool" },
+      { label: "融合排序", sub: "两路并成一张榜", tone: "warn" },
+      { label: "截断", sub: "只留少量候选", tone: "result" }
+    ],
+    points: [
+      "距离过滤分两层：绝对上限，以及离最优太远的相对地板。",
+      "关键词通道专门兜型号与专有名词，语义搜不到时能救回来。",
+      "融合排序让两路各自的长处都保留，而不是简单取交集。"
+    ]
+  },
+  {
+    chapter: "关键设计",
+    title: "答案必须能指回原文",
+    narration: "生成时只允许依据检索到的块，回答里标注来源；检索为空就直接说没有依据。",
+    nodes: [
+      { label: "候选证据", sub: "排序后的块", tone: "doc" },
+      { label: "组装上下文", sub: "带块编号", tone: "tool" },
+      { label: "生成", sub: "只依据证据", tone: "result" },
+      { label: "标注出处", sub: "每段可回跳", tone: "check" },
+      { label: "无依据拒答", sub: "说没有而不是编", tone: "warn" }
+    ],
+    points: [
+      "拒答是功能而不是缺陷：编一个答案的代价远高于说没有。",
+      "引用细到块，用户能点回去核对原文。",
+      "上下文只放必要片段，放太多反而容易跑题。"
+    ]
+  },
+  {
+    chapter: "异常与边界",
+    title: "删一份资料，两边都要干净",
+    narration: "删除先动事实源，再删向量，最后回查一遍；关键词索引从事实源重建，避免留下幽灵证据。",
+    nodes: [
+      { label: "删除请求", sub: "指定文档", tone: "actor" },
+      { label: "删事实源", sub: "先落库", tone: "doc" },
+      { label: "删向量", sub: "按文档标识", tone: "check" },
+      { label: "二次校验", sub: "回查残留", tone: "warn" },
+      { label: "重建关键词", sub: "从事实派生", tone: "tool" },
+      { label: "一致", sub: "查不到也不返回", tone: "result" }
+    ],
+    points: [
+      "顺序很重要：先删索引后删事实，失败时会出现查得到却不存在。",
+      "二次校验专门抓残留向量，这类问题最难靠肉眼发现。",
+      "有回归测试守着这条链路，改代码不至于悄悄破坏一致性。"
+    ]
+  },
+  {
+    chapter: "异常与边界",
+    title: "别人的资料，检索不到",
+    narration: "每个请求都带身份，向量过滤与关系库条件双写；跨身份检索直接不命中，而不是查到了再判断。",
+    nodes: [
+      { label: "请求身份", sub: "谁在问", tone: "actor" },
+      { label: "元数据过滤", sub: "按归属筛", tone: "check" },
+      { label: "关系库条件", sub: "同一套口径", tone: "check" },
+      { label: "候选结果", sub: "只含自己的", tone: "tool" },
+      { label: "越权不命中", sub: "不暴露存在性", tone: "result" }
+    ],
+    points: [
+      "隔离放在检索前，避免先拿到再决定给不给。",
+      "两处过滤用同一套归属口径，防止一处漏掉。",
+      "越权请求按没有资料处理，不透露对方有没有。"
+    ]
+  },
+  {
+    chapter: "质量与评测",
+    title: "开关开不开，让题集决定",
+    narration: "标注集分成可答、离题、越权三类；改一次跑一次，比较召回、排序质量、引用正确率与拒答率。",
+    nodes: [
+      { label: "标注集", sub: "三类题", tone: "doc" },
+      { label: "真实跑", sub: "用真实嵌入", tone: "tool" },
+      { label: "对比开关", sub: "开与不开", tone: "check" },
+      { label: "看指标", sub: "成组看", tone: "result" },
+      { label: "定默认", sub: "有收益才开", tone: "check" }
+    ],
+    points: [
+      "指标要成组看：召回上去但拒答率掉下来，等于没变好。",
+      "评测能抓到分词方式不对这类隐蔽问题，靠肉眼很难发现。",
+      "没有实测收益的开关默认关掉，少一层就少一处故障。"
+    ]
+  },
+  {
+    chapter: "可观测",
+    title: "接口这层要能被运维",
+    narration: "每个请求有编号，日志是结构化的一行，错误统一成一种形状，超量请求直接限流。",
+    layers: [
+      { name: "请求标识", chips: [
+        { label: "请求编号", sub: "一条请求一个", tone: "tool" },
+        { label: "结构化日志", sub: "按行可检索", tone: "doc" },
+        { label: "耗时记录", sub: "定位慢在哪", tone: "check" }
+      ]},
+      { name: "错误", chips: [
+        { label: "业务错误", sub: "说清原因", tone: "result" },
+        { label: "未知错误", sub: "不外泄堆栈", tone: "warn" }
+      ]},
+      { name: "保护", chips: [
+        { label: "限流", sub: "超量拒绝", tone: "warn" },
+        { label: "健康检查", sub: "依赖可用性", tone: "check" }
+      ]}
+    ],
+    points: [
+      "请求编号让用户描述与日志某行能对上。",
+      "统一错误结构，前端不用为每个接口写一套解析。",
+      "健康检查要能区分服务在不在、依赖可不可用。"
+    ]
+  }
+];
+</script>
+<script src="animation.js"></script>
+</body>
+</html>

@@ -469,6 +469,6 @@ export const HONORS: { title: string; award: string; desc?: string }[] = [
 export const EMAIL_PARTS = ["1811180368", "@", "qq.com"];
 /** 项目均无远程仓库，统一表述为“源码可提供 / 本地可运行”。 */
 export const GITHUB_STATUS = "源码可提供（本地可运行）";
-export const GITHUB_URL = "https://github.com/YangWei-Ljj";
-export const GITHUB_HANDLE = "YangWei-Ljj";
+export const GITHUB_URL = "https://github.com/YangWei-0502";
+export const GITHUB_HANDLE = "YangWei-0502";
 export const RESUME_URL = "/resume/resume.pdf";

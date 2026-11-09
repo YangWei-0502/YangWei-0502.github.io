@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://yangwei-ljj.github.io/</loc>
+    <loc>https://yangwei-0502.github.io/</loc>
     <changefreq>monthly</changefreq>
     <priority>1</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/projects</loc>
+    <loc>https://yangwei-0502.github.io/projects</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/about</loc>
+    <loc>https://yangwei-0502.github.io/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/contact</loc>
+    <loc>https://yangwei-0502.github.io/contact</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/projects/repomind</loc>
+    <loc>https://yangwei-0502.github.io/projects/repomind</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/projects/sweeper</loc>
+    <loc>https://yangwei-0502.github.io/projects/sweeper</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/projects/ecom-rag</loc>
+    <loc>https://yangwei-0502.github.io/projects/ecom-rag</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/projects/companion</loc>
+    <loc>https://yangwei-0502.github.io/projects/companion</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/projects/smartcare</loc>
+    <loc>https://yangwei-0502.github.io/projects/smartcare</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yangwei-ljj.github.io/projects/interview</loc>
+    <loc>https://yangwei-0502.github.io/projects/interview</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_SITE_URL: https://yangwei-ljj.github.io
+      NEXT_PUBLIC_SITE_URL: https://yangwei-0502.github.io
     steps:
       - name: Checkout
         uses: actions/checkout@v4
